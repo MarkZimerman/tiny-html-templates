@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mocha + Chai Template</title>
+    <!-- Mocha styles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mocha/3.2.0/mocha.css">
+
+    <!-- Testing libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/3.2.0/mocha.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chai/3.5.0/chai.js"></script>
+    
+    <!-- Initialization -->
+    <script>
+        mocha.setup('bdd');
+        const assert = chai.assert;
+    </script>
+
+    <!-- JavaScript playground -->
+    <script>
+        function sum(a, b) {
+            return a + b;
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Test results mount point -->
+    <div id="mocha"></div>
+
+    <!-- Tests + run -->
+    <script>
+        describe('Sum Function', function() {
+            it('should return 5 for sum(2, 3)', function() {
+                assert.equal(sum(2, 3), 5);
+            });
+        });
+
+        mocha.run();
+    </script>
+</body>
+
+</html>
