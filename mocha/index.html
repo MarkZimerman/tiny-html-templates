@@ -4,35 +4,370 @@
 <head>
     <title>Mocha + Chai Template</title>
     <!-- Mocha styles -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mocha/3.2.0/mocha.css">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/mocha/3.2.0/mocha.css'>
 
     <!-- Testing libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/3.2.0/mocha.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chai/3.5.0/chai.js"></script>
-    
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mocha/3.2.0/mocha.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/chai/3.5.0/chai.js'></script>
+
     <!-- Initialization -->
     <script>
         mocha.setup('bdd');
         const assert = chai.assert;
+        const expect = chai.expect;
     </script>
 
     <!-- JavaScript playground -->
     <script>
-        function sum(a, b) {
-            return a + b;
+        function filterRange(array, min, max) {
+            return array.filter(item => item >= min && item <= max);
+        }
+
+        function filterRangeInPlace(array, min, max) {
+            for (let i = 0; i < array.length; i++) {
+                const item = array[i];
+
+                if (item < min || item > max) {
+                    array.splice(i, 1);
+                    i--; // TODO: 🤦 forgot to move queue to the one step left! Uncomment for the solution
+                }
+            }
+
+            return array;
+        }
+
+        function sortBack(array) {
+            // return array.sort().reverse(); // Direct solution: sorts number as strings -> bad approach
+            return array.sort((a, b) => b - a);
+        }
+
+        function copySorted(array) {
+            return array.slice().sort();
+        }
+
+        const Test = function () {
+            return { "a": "b" };
+        }
+
+        function Calculator() {
+            this.methods = {
+                "+": (a, b) => a + b,
+                "-": (a, b) => a - b,
+            };
+
+            this.calculate = function (prompt) {
+                const parsed = prompt.split(" ");
+                const a = Number(parsed[0]);
+                const operator = parsed[1].trim();
+                const b = Number(parsed[2]);
+
+                if (parsed.length < 3 || isNaN(a) || isNaN(b)) {
+                    return NaN;
+                }
+
+                if (typeof this.methods[operator] !== 'function') {
+                    throw new Error("Unknown operator used");
+                }
+
+                return this.methods[operator](a, b);
+            }
+
+            this.addMethod = function (operator, func) {
+                this.methods[operator] = func;
+            }
+        }
+
+        function mapUsersToNames(array) {
+            return array.map(user => user.name);
+        }
+
+        function mapUserNamesToFullNames(array) {
+            return array.map(user => ({ fullName: `${user.name} ${user.surname}`, id: user.id }));
+        }
+
+        function sortByAge(array) {
+            return array.sort((a, b) => a.age - b.age);
+        }
+
+        function shuffleFisherYates(array) {
+            function getRandomIndexWithMax(max) {
+                return Math.floor(Math.random() * (max + 1));
+            }
+
+            function swap(pos1, pos2) {
+                if (pos1 === pos2) {
+                    return;
+                }
+
+                const tmp = array[pos1];
+                array[pos1] = array[pos2];
+                array[pos2] = tmp;
+            }
+
+            let j;
+            for (let i = array.length - 1; i > 0; i--) {
+                j = getRandomIndexWithMax(i);
+                swap(i, j);
+            }
+        }
+
+        function getAverageAge(users) {
+            return users.reduce((acc, user) => acc + user.age, 0) / users.length;
+        }
+
+        // For strings only:
+        function unique(array) {
+            const seen = {};
+            const result = [];
+
+            for (const item of array) {
+                const key = `${typeof item}_${item}`;
+                if (!seen[key]) {
+                    seen[key] = true;
+                    result.push(item);
+                }
+            }
+
+            return result;
+        }
+
+        function groupById(users) {
+            /*
+            const result = {};
+            for (const user of users) {
+                result[user.id] = user;
+            }
+
+            return result;
+            */
+
+            // Implementation using reduce:
+            return users.reduce((acc, user) => { 
+                acc[user.id] = user;
+                return acc;
+            }, {});
         }
     </script>
 </head>
 
 <body>
     <!-- Test results mount point -->
-    <div id="mocha"></div>
+    <div id='mocha'></div>
 
     <!-- Tests + run -->
     <script>
-        describe('Sum Function', function() {
-            it('should return 5 for sum(2, 3)', function() {
-                assert.equal(sum(2, 3), 5);
+        // Link: https://learn.javascript.ru/task/filter-range
+        describe(`${filterRange.name} Function`, function () {
+            const testArray = [5, 3, 8, 1];
+
+            it('should not mutate the original array', function () {
+                const copy = testArray.slice();
+                const result = filterRange(testArray, 1, 4);
+
+                expect(testArray).to.eql(copy);
+            });
+
+            it('should return filtered array "[3, 1]" for arguments "filterRange([5, 3, 8, 1], 1, 4)"', function () {
+                expect(filterRange(testArray, 1, 4)).to.eql([3, 1]);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/filter-range-in-place
+        describe(`${filterRangeInPlace.name} Function`, function () {
+            const testArray = [5, 3, 8, 1];
+
+            it('should mutate the original array', function () {
+                const copy = testArray.slice();
+                const result = filterRangeInPlace(copy, 1, 4);
+
+                expect(testArray).not.to.eql(copy);
+            });
+
+            it('should return mutated array "[3, 1]" for arguments "filterRangeInPlace([5, 3, 8, 1], 1, 4)"', function () {
+                const copy = testArray.slice();
+                expect(filterRangeInPlace(copy, 1, 4)).to.eql([3, 1]);
+            });
+
+            it('should return mutated array "[3, 4]" for arguments "filterRangeInPlace([1, 2, 3, 4], 3, 4)"', function () {
+                expect(filterRangeInPlace([1, 2, 3, 4], 3, 4)).to.eql([3, 4]);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/sort-back
+        describe(`${sortBack.name} Function`, function () {
+            it('should return a sorted array [8, 5, 2, 1, -10] for arguments "sortBack([5, 2, 1, -10, 8])"', function () {
+                expect(sortBack([5, 2, 1, -10, 8])).to.eql([8, 5, 2, 1, -10]);
+            });
+
+            it('should return a sorted array [15, 3, 2, 1] for arguments "sortBack([1, 2, 15, 3])"', function () {
+                expect(sortBack([1, 2, 15, 3])).to.eql([15, 3, 2, 1]);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/copy-sort-array
+        describe(`${copySorted.name} Function`, function () {
+            const arr = ['HTML', 'JavaScript', 'CSS'];
+
+            it('should not mutate the original array', function () {
+                const copy = arr.slice();
+                const result = copySorted(arr);
+
+                expect(arr).to.eql(copy);
+            });
+
+            it(`should return a sorted array ["CSS", "HTML", "JavaScript"] for arguments "copySorted([${arr}])"`, function () {
+                expect(copySorted(arr)).to.eql(['CSS', 'HTML', 'JavaScript']);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/calculator-extendable
+        describe(`Simple calculator should calculate and be extensible`, function () {
+            const powerCalc = new Calculator;
+
+            it('should use default (+) method powerCalc.calculate("3 + 7")', function () {
+                assert.equal(powerCalc.calculate('3 + 7'), 10);
+            });
+
+            it('should add new method (*) and use it: powerCalc.calculate("3 * 4")', function () {
+                powerCalc.addMethod("*", (a, b) => a * b);
+                assert.equal(powerCalc.calculate('3 * 4'), 12);
+            });
+
+            it('should add new method (/) and use it: powerCalc.calculate("10 / 5")', function () {
+                powerCalc.addMethod("/", (a, b) => a / b);
+                assert.equal(powerCalc.calculate('10 / 5'), 2);
+            });
+
+            it('should add new method (**) and use it: powerCalc.calculate("2 ** 3")', function () {
+                powerCalc.addMethod("**", (a, b) => a ** b);
+                assert.equal(powerCalc.calculate('2 ** 3'), 8);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/array-get-names
+        describe(`Map array of users to the array of their names`, function () {
+            const john = { name: 'John', age: 25 };
+            const peter = { name: 'Peter', age: 30 };
+            const maria = { name: 'Maria', age: 28 };
+
+            const users = [john, peter, maria];
+
+            it('should return an array of names', function () {
+                expect(mapUsersToNames(users)).to.eql(['John', 'Peter', 'Maria']);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/array-get-names
+        describe(`Map array of users to the array of their full names and ID`, function () {
+            const john = { name: 'John', surname: "Dow", id: 1 };
+            const peter = { name: 'Peter', surname: "Parker", id: 2 };
+            const maria = { name: 'Maria', surname: "Poppins", id: 3 };
+
+            const users = [john, peter, maria];
+
+            it('should return an array of names', function () {
+                const usersMapped = [
+                    { fullName: "John Dow", id: 1 },
+                    { fullName: "Peter Parker", id: 2 },
+                    { fullName: "Maria Poppins", id: 3 }
+                ]
+
+                expect(mapUserNamesToFullNames(users)).to.eql(usersMapped);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/array-get-names
+        describe(`Sorts array of users by their age`, function () {
+            const john = { name: 'John', age: 25 };
+            const peter = { name: 'Peter', age: 30 };
+            const maria = { name: 'Maria', age: 28 };
+
+            const users = [john, peter, maria];
+
+            it("Should sort users by age", function () {
+                const sorted = [john, maria, peter];
+
+                expect(sortByAge(users)).to.eql(sorted);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/shuffle
+        describe(`Shuffles the array`, function () {
+            it("should shuffle the array", function () {
+                const arr = [1, 2, 3, 4];
+                const arrCopy = arr.slice();
+                expect(shuffleFisherYates(arr)).not.to.eql(arrCopy);
+            })
+        });
+
+        // Link: https://learn.javascript.ru/task/average-age
+        describe(`Calculates average age of the users`, function () {
+            it("should return 28 as the average age", function () {
+                const john = { name: 'John', age: 25 };
+                const peter = { name: 'Peter', age: 30 };
+                const maria = { name: 'Maria', age: 29 };
+
+                const users = [john, peter, maria];
+
+                assert.equal(getAverageAge(users), 28);
+            })
+        });
+
+        // Link: https://learn.javascript.ru/task/array-unique
+        describe('Returns array with unique values', function () {
+            it('should return unique numbers', function () {
+                const arr = [1, 2, 3, 1, 2, 5];
+                expect(unique(arr)).to.eql([1, 2, 3, 5]);
+            });
+
+            it('should preserve order for numbers', function () {
+                const arr = [3, 3, 2, 2, 1, 1];
+                expect(unique(arr)).to.eql([3, 2, 1]);
+            });
+
+            it('should return unique mixed types', function () {
+                const arr = [1, "1", 1, "1"];
+                expect(unique(arr)).to.eql([1, "1"]);
+            });
+
+            it('should handle booleans', function () {
+                const arr = [true, false, true, false];
+                expect(unique(arr)).to.eql([true, false]);
+            });
+
+            it('should handle null and undefined', function () {
+                const arr = [null, undefined, null, undefined];
+                expect(unique(arr)).to.eql([null, undefined]);
+            });
+
+            it('should keep NaN only once', function () {
+                const arr = [NaN, NaN, 1, NaN];
+                expect(unique(arr)[0]).to.be.NaN;
+                expect(unique(arr)[1]).to.equal(1);
+                expect(unique(arr)).to.have.length(2);
+            });
+
+            it('should return empty array when input is empty', function () {
+                expect(unique([])).to.eql([]);
+            });
+        });
+
+        // Link: https://learn.javascript.ru/task/reduce-object
+        describe('Groups an array of user objects by id', function () {
+            it('should return an object grouped by id', function () {
+                const users = [
+                    { id: 'john', name: "John Smith", age: 20 },
+                    { id: 'ann', name: "Ann Smith", age: 24 },
+                    { id: 'pete', name: "Pete Peterson", age: 31 },
+                ];
+
+                const expectedResult = {
+                    john: { id: 'john', name: "John Smith", age: 20 },
+                    ann: { id: 'ann', name: "Ann Smith", age: 24 },
+                    pete: { id: 'pete', name: "Pete Peterson", age: 31 },
+                };
+
+                expect(groupById(users)).to.eql(expectedResult);
             });
         });
 
